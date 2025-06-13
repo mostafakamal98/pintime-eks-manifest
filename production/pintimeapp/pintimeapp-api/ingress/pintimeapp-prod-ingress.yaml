@@ -9,9 +9,9 @@ metadata:
     #alb.ingress.kubernetes.io/group.name: trueapp-nonexpose-cms-prod
     #alb.ingress.kubernetes.io/group.order: '5'
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/scheme: internet-facing
     #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:306931602752:certificate/e8a87e0f-d7d1-4658-b342-343126cfe6df
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    #alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
     alb.ingress.kubernetes.io/healthcheck-path: "/healthz"
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '60'
     alb.ingress.kubernetes.io/actions.response-healthz: >
