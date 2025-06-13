@@ -19,7 +19,7 @@ spec:
       #serviceAccountName: pintimeapp
       containers:
         - name: pintimeapp-api-prod-php
-          image: 253647675760.dkr.ecr.us-east-1.amazonaws.com/production/pintime-eks:cd89ff7
+          image: 253647675760.dkr.ecr.us-east-1.amazonaws.com/production/pintime-eks:1d0fcd6
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9000
@@ -83,18 +83,18 @@ spec:
             #  subPath: www.conf
             #- name: pintimeapp-api-prod-storage
             #  mountPath: /storage/
-          #lifecycle:
-          #  postStart:
-          #    exec:
-          #      command:
-          #        - "sh"
-          #        - "-c"
-          #        - >
-          #          chmod -R 777 /public_html/pintime/storage;
-#
-          #  preStop:
-          #    exec:
-          #      command: ["/bin/bash", "-c", "/bin/sleep 10; kill -QUIT 1"]
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "sh"
+                  - "-c"
+                  - >
+                    cp -r /pintime_code/* /public_html/;chmod -R 777 /public_html/pintime/storage;
+
+            preStop:
+              exec:
+                command: ["/bin/bash", "-c", "/bin/sleep 10; kill -QUIT 1"]
         - name: pintimeapp-api-prod-nginx
           image: public.ecr.aws/nginx/nginx:1.18
           ports:
