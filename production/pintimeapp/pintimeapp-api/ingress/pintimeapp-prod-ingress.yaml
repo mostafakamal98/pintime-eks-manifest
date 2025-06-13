@@ -22,7 +22,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: pintimeapp-api-prod-alb-677637899.us-east-1.elb.amazonaws.com
+  - host: pintime-eks.pintimehr.com
     http:
       paths:
       - path: /
