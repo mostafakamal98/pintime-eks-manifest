@@ -1,0 +1,42 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pintimeapp-api-prod-nginx-default-conf
+  namespace: pintimeapp
+data:
+  default.conf: |
+   server {
+       listen 80;   
+       index index.php index.html;
+       server_name _;
+   
+       root /public_html/pintime/public;
+       client_max_body_size 12M;
+      #  auth_basic "Restricted Access";
+      #  auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
+       location / {
+           index index.php index.html index.htm;
+           try_files $uri $uri/ /index.php$is_args$args;
+           gzip_static on;
+       }
+
+        #  location /login {
+        #      auth_basic "Restricted Access";
+        #      auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
+        #      try_files $uri $uri/ /index.php$is_args$args;
+        #      gzip_static on;
+        #   }
+
+       location ~ \.php$ {
+           try_files $uri =404;
+           fastcgi_split_path_info ^(.+\.php)(/.+)$;
+           fastcgi_pass 127.0.0.1:9000;
+           fastcgi_hide_header X-Service-Name;
+           fastcgi_index index.php;
+           include fastcgi_params;
+           fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+           fastcgi_param PATH_INFO $fastcgi_path_info;
+           fastcgi_buffer_size 4k;
+           fastcgi_buffers 13 4k;
+       }
+   }
