@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pintimeapp-api-ingress
+  namespace: pintimeapp
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/load-balancer-name: pintimeapp-api-prod-alb
+    #alb.ingress.kubernetes.io/group.name: trueapp-nonexpose-cms-prod
+    #alb.ingress.kubernetes.io/group.order: '5'
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/scheme: internal
+    #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:306931602752:certificate/e8a87e0f-d7d1-4658-b342-343126cfe6df
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/healthcheck-path: "/healthz"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '60'
+    alb.ingress.kubernetes.io/actions.response-healthz: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"200","messageBody":"healthz success text"}}
+    alb.ingress.kubernetes.io/success-codes: 200-404
+  labels:
+    app: pintimeapp-api-prod
+spec:
+  ingressClassName: alb
+  rules:
+  - host: pintimetest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pintimeapp-api-prod-svc
+            port: 
+              number: 80
+      - path: /healthz
+        pathType: Prefix
+        backend:
+          service:
+            name: response-healthz
+            port: 
+              name: use-annotation
