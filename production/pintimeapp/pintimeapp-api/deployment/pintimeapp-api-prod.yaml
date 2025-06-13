@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # annotations:
+  #   reloader-stakater.com/auto: "true"
+  name: pintimeapp-api-prod
+  namespace: pintimeapp
+  labels:
+     app: pintimeapp-api-prod
+spec:
+  selector:
+    matchLabels:
+      app: pintimeapp-api-prod
+  template:
+    metadata:
+      labels:
+        app: pintimeapp-api-prod
+    spec:
+      #serviceAccountName: pintimeapp
+      containers:
+        - name: pintimeapp-api-prod-php
+          image: 253647675760.dkr.ecr.us-east-1.amazonaws.com/production/pintime-eks:cd89ff7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              memory: "2048Mi"
+              cpu: "1"
+            limits:
+              memory: "2048Mi"
+              cpu: "1"
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TZ
+              value: "Asia/Bangkok"
+          envFrom:
+            - configMapRef:
+                name: pintimeapp-api-prod-php-env
+            #- secretRef:
+            #    name: postgresql
+          #readinessProbe:
+          #  httpGet:
+          #    path: /health/check
+          #    port: 80
+          #    # httpHeaders:
+          #    #   - name: Host
+          #    #     value: pintimeapp-prod.true.th
+          #  failureThreshold: 6
+          #  periodSeconds: 30
+          #  initialDelaySeconds: 10
+          #  timeoutSeconds: 8
+          #livenessProbe:
+          #  httpGet:
+          #    path: /health/check
+          #    port: 80
+          #    # httpHeaders:
+          #    #   - name: Host
+          #    #     value: pintimeapp-prod.true.th
+          #  failureThreshold: 10
+          #  periodSeconds: 60
+          #  initialDelaySeconds: 60
+          #  timeoutSeconds: 8
+          volumeMounts:
+            - name: pintimeapp-api-prod-code-path
+              mountPath: /public_html/
+            #- name: pintimeapp-api-prod-php-fpm-conf
+            #  mountPath: /usr/local/etc/php-fpm.conf
+            #  subPath: php-fpm.conf
+            #- name: pintimeapp-api-prod-www-conf
+            #  mountPath: /usr/local/etc/php-fpm.d/www.conf
+            #  subPath: www.conf
+            #- name: pintimeapp-api-prod-storage
+            #  mountPath: /storage/
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "sh"
+                  - "-c"
+                  - >
+                    chmod -R 777 /public_html/pintime/storage;
+
+            preStop:
+              exec:
+                command: ["/bin/bash", "-c", "/bin/sleep 10; kill -QUIT 1"]
+        - name: pintimeapp-api-prod-nginx
+          image: public.ecr.aws/nginx/nginx:1.18
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: ".5"
+            limits:
+              memory: "1024Mi"
+              cpu: ".5"
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sleep 5 && /usr/sbin/nginx
+                  - -s
+                  - quit
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_SERVICE
+              value: "CMS"
+          #readinessProbe:
+          #  httpGet:
+          #    path: /health/check
+          #    port: 80
+          #    # httpHeaders:
+          #    #   - name: Host
+          #    #     value: pintimeapp-prod.true.th
+          #  failureThreshold: 6
+          #  periodSeconds: 30
+          #  initialDelaySeconds: 10
+          #  timeoutSeconds: 8
+          #livenessProbe:
+          #  httpGet:
+          #    path: /health/check
+          #    port: 80
+          #    # httpHeaders:
+          #    #   - name: Host
+          #    #     value: pintimeapp-prod.true.th
+          #  failureThreshold: 10
+          #  periodSeconds: 60
+          #  initialDelaySeconds: 60
+          #  timeoutSeconds: 8
+          volumeMounts:
+            - name: pintimeapp-api-prod-code-path
+              mountPath: /public_html/
+            - name: pintimeapp-api-prod-nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: pintimeapp-api-prod-nginx-default-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            #- name: pintimeapp-api-prod-nginx-htpass
+            #  mountPath: /etc/nginx/conf.d/.htpasswd
+            #  subPath: .htpasswd
+            #- name: pintimeapp-api-prod-storage
+            #  mountPath: /storage/
+      terminationGracePeriodSeconds: 60
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      volumes:
+        - name: pintimeapp-api-prod-code-path
+          emptyDir: {}
+        - name: pintimeapp-api-prod-nginx-conf
+          configMap:
+            name: pintimeapp-api-prod-nginx-conf
+        #- name: pintimeapp-backend-dev
+        #  secret:
+        #    secretName: pintimeapp-backend-dev
+        - name: pintimeapp-api-prod-nginx-default-conf
+          configMap:
+            name: pintimeapp-api-prod-nginx-default-conf
+        #- name: pintimeapp-api-prod-storage
+        #  persistentVolumeClaim:
+        #    claimName: pintimeapp-prod-pvc
+        #- name: pintimeapp-api-prod-php-fpm-conf
+        #  configMap:
+        #    name: pintimeapp-api-prod-php-fpm-conf
+        #- name: pintimeapp-api-prod-www-conf
+        #  configMap:
+        #    name: pintimeapp-api-prod-www-conf
+        - name: pintimeapp-api-prod-php-env
+          configMap:
+            name: pintimeapp-api-prod-php-env
+      #imagePullSecrets:
+      #  - name: ecr-credentials
