@@ -22,7 +22,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: pintimetest.com
+  - host: pintimeapp-api-prod-alb-677637899.us-east-1.elb.amazonaws.com
     http:
       paths:
       - path: /
